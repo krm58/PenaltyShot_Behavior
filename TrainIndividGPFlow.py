@@ -12,7 +12,7 @@ tf.set_random_seed(1234)
 import pickle
 import argparse
 
-#Model to train the individual policy models for Penalty Shot
+#Model to train the individual Policy and Value Function models for Penalty Shot
 
 def train_model(**kwargs):
 	subID = kwargs['subID']
@@ -33,11 +33,7 @@ def train_model(**kwargs):
 
 	print("Loading Data for Subject " + str(subID) + "....")
 
-	if subID == 50: #this sub had 4 runs, 1 with fatsat, 2,3,4 without fatsat
-		data = h5py.File('penaltykickdata_neuroimaging_234fixed.h5')
-		print("Using the data version of Runs 2,3,4 without fatsat!")
-	else:
-		data = h5py.File('penaltykickdata.h5','r')
+	data = h5py.File('penaltykickdata.h5','r')
 	subID1HE = np.array(data.get('subID')).astype('float32')
 	otherdata = np.array(data.get('otherfeatures')).astype('float32')
 	switchBool = np.array(data.get('targets')).astype('float32') #did they switch at time t+1
@@ -99,16 +95,10 @@ def train_model(**kwargs):
 
 
 	if whichModel == 'PSwitch':
-		if subID != 50:
-			experstring = 'fulldatatrim_sub' + str(subID) + '_iters' + str(iters) + '_inducingpts' + str(numInducingPoints) + '_' + "_npseed" + str(npseed)
-		else:
-			experstring = 'runs234_sub' + str(subID) + '_iters' + str(iters) + '_inducingpts' + str(numInducingPoints) + '_' + "_npseed" + str(npseed)
+		experstring = 'fulldatatrim_sub' + str(subID) + '_iters' + str(iters) + '_inducingpts' + str(numInducingPoints) + '_' + "_npseed" + str(npseed)
 		fw = tf.summary.FileWriter("finalsubjtrainindivid_logs/{}".format(experstring), m.graph)
 	elif whichModel == 'ExtraEV':
-		if subID != 50:
-			experstring = 'ExtraEV_sub' + str(subID) + '_iters' + str(iters) + '_inducingpts' + str(numInducingPoints) + '_' + "_npseed" + str(npseed)	
-		else:
-			experstring = 'ExtraEV_runs234_sub' + str(subID) + '_iters' + str(iters) + '_inducingpts' + str(numInducingPoints) + '_' + "_npseed" + str(npseed)
+		experstring = 'ExtraEV_sub' + str(subID) + '_iters' + str(iters) + '_inducingpts' + str(numInducingPoints) + '_' + "_npseed" + str(npseed)	
 		fw = tf.summary.FileWriter("ExtraEVfinalsubjtrainindivid_logs/{}".format(experstring), m.graph)
 
 	#define summary scalars for examination in tensorboard
@@ -140,25 +130,14 @@ def train_model(**kwargs):
 	param_dict = {p[0].full_name.replace('SGPR', 'SGPU'): p[1] for p in zip(m.trainable_parameters, m.read_trainables())}
 	
 	if whichModel == 'PSwitch':
-		if subID != 50:
-			with open('finalindividsubjGPs/pswitchmodel_fulltrimdata_'+str(numInducingPoints)+'IP_sub'+str(subID)+'_np'+str(npseed)+ '_iters' + str(iters) + '.pickle', 'wb') as handle:
-				pickle.dump(param_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
-			m.as_pandas_table().to_pickle('finalindividsubjGPs/pswitchmodelparams_fulltrimdata_'+str(numInducingPoints)+'IP_sub'+str(subID)+'_np'+str(npseed) + '_iters'+str(iters))
-		else:
-			with open('finalindividsubjGPs/pswitchmodel_dataruns234_'+str(numInducingPoints)+'IP_sub'+str(subID)+'_np'+str(npseed)+ '_iters' + str(iters) + '.pickle', 'wb') as handle:
-				pickle.dump(param_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
-			m.as_pandas_table().to_pickle('finalindividsubjGPs/pswitchmodelparams_dataruns234_'+str(numInducingPoints)+'IP_sub'+str(subID)+'_np'+str(npseed) + '_iters'+str(iters))
+		with open('finalindividsubjGPs/pswitchmodel_fulltrimdata_'+str(numInducingPoints)+'IP_sub'+str(subID)+'_np'+str(npseed)+ '_iters' + str(iters) + '.pickle', 'wb') as handle:
+			pickle.dump(param_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
+		m.as_pandas_table().to_pickle('finalindividsubjGPs/pswitchmodelparams_fulltrimdata_'+str(numInducingPoints)+'IP_sub'+str(subID)+'_np'+str(npseed) + '_iters'+str(iters))
 	elif whichModel == 'ExtraEV':
-		if subID != 50:
-			with open('ExtraEVfinalindividsubjGPs/fulltrimdata_'+str(numInducingPoints)+'IP_sub'+str(subID)+'_np'+str(npseed)+ '_iters' + str(iters) + '.pickle', 'wb') as handle:
-				pickle.dump(param_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
-			m.as_pandas_table().to_pickle('ExtraEVfinalindividsubjGPs/params_fulltrimdata_'+str(numInducingPoints)+'IP_sub'+str(subID)+'_np'+str(npseed) + '_iters'+str(iters))
-		else:
-			with open('ExtraEVfinalindividsubjGPs/dataruns234'+str(numInducingPoints)+'IP_sub'+str(subID)+'_np'+str(npseed)+ '_iters' + str(iters) + '.pickle', 'wb') as handle:
-				pickle.dump(param_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
-			m.as_pandas_table().to_pickle('ExtraEVfinalindividsubjGPs/params_dataruns234_'+str(numInducingPoints)+'IP_sub'+str(subID)+'_np'+str(npseed) + '_iters'+str(iters))
-
-
+		with open('ExtraEVfinalindividsubjGPs/fulltrimdata_'+str(numInducingPoints)+'IP_sub'+str(subID)+'_np'+str(npseed)+ '_iters' + str(iters) + '.pickle', 'wb') as handle:
+			pickle.dump(param_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
+		m.as_pandas_table().to_pickle('ExtraEVfinalindividsubjGPs/params_fulltrimdata_'+str(numInducingPoints)+'IP_sub'+str(subID)+'_np'+str(npseed) + '_iters'+str(iters))
+		
 	print("Calculating Goalie Gradient Metric....")
 	
 	inds = np.array([0, 3], dtype=np.int32) #for goalie position and goalie y-velocity variables
@@ -185,17 +164,10 @@ def train_model(**kwargs):
 	mywhitemetric = result[:,0]**2 + result[:,1]**2
 
 	if whichModel == 'PSwitch':
-		if subID != 50:
-			np.save("finalindividsubjGPs/pswitchgradmetric_trimsub" + str(subID) + "_" + str(numInducingPoints) + "IPs_" + "npseed" + str(npseed) + '_' + str(iters) + 'iters.npy', mywhitemetric)
-		else:
-			np.save("finalindividsubjGPs/pswitchgradmetric_runs234_sub" + str(subID) + "_" + str(numInducingPoints) + "IPs_" + "npseed" + str(npseed) + '_' + str(iters) + 'iters.npy', mywhitemetric)
-
+		np.save("finalindividsubjGPs/pswitchgradmetric_trimsub" + str(subID) + "_" + str(numInducingPoints) + "IPs_" + "npseed" + str(npseed) + '_' + str(iters) + 'iters.npy', mywhitemetric)
+		
 	elif whichModel == 'ExtraEV':
-		if subID != 50:
-			np.save("ExtraEVfinalindividsubjGPs/gradmetric_trimsub" + str(subID) + "_" + str(numInducingPoints) + "IPs_" + "npseed" + str(npseed) + '_' + str(iters) + 'iters.npy', mywhitemetric)
-		else:
-			np.save("ExtraEVfinalindividsubjGPs/gradmetric_runs234_sub" + str(subID) + "_" + str(numInducingPoints) + "IPs_" + "npseed" + str(npseed) + '_' + str(iters) + 'iters.npy', mywhitemetric)
-
+		np.save("ExtraEVfinalindividsubjGPs/gradmetric_trimsub" + str(subID) + "_" + str(numInducingPoints) + "IPs_" + "npseed" + str(npseed) + '_' + str(iters) + 'iters.npy', mywhitemetric)
 		
 	print("Subject " + str(subID) + " Complete")
 	
@@ -235,6 +207,6 @@ if __name__ == "__main__":
 	parser.add_argument('--iterations',default=200000,type=int)
 	parser.add_argument('--gpu',default=0, type=int)
 	parser.add_argument('--IP', default=500, type=int)
-	parser.add_argument('--whichModel', default='PSwitch', type=str) #PSwitch or EV or ExtraEV
+	parser.add_argument('--whichModel', default='PSwitch', type=str) #PSwitch or ExtraEV
 	args = parser.parse_args()
 	train_model(**vars(args))
